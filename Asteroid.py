@@ -88,4 +88,23 @@ class FlyingObject(ABC):
     
     def draw(self):
         arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
-                
+
+class Asteroid(FlyingObject):
+    def __init__(self, img):
+        super().__init__(img)
+        self.radius = 0
+ 
+    def Spin(self, spin):
+        # Make the asteroid spin
+        self.spin = spin
+        self.angle += self.spin
+        
+    def draw(self):
+        arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
+        if not self.alive:
+            self.img = "images/explode.jpg"
+            self.texture = arcade.load_texture(self.img)
+            self.width = self.texture.width
+            self.height = self.texture.height
+            arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
+                 
