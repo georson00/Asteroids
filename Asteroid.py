@@ -280,3 +280,234 @@ class Ship(FlyingObject):
         # Thrust the ship backward
         self.velocity.dx += math.sin(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
         self.velocity.dy -= math.cos(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
+class Game(arcade.Window):
+    """
+    This class handles all the game callbacks and interaction
+    This class will then call the appropriate functions of
+    each of the above classes.
+    You are welcome to modify anything in this class.
+    """
+
+    def __init__(self, width, height):
+        """
+        Sets up the initial conditions of the game
+        :param width: Screen width
+        :param height: Screen height
+        """
+        super().__init__(width, height)
+        arcade.set_background_color(arcade.color.SMOKY_BLACK)
+        self.score = 0
+
+        self.held_keys = set()
+
+        # TODO: declare anything here you need the game class to track
+        self.bullets = []
+         
+        
+        self.ship = Ship()
+        self.asteroids = []
+        
+        # Begin the Game with a number of Asteroids
+        #INITIAL_ROCK_COUNT: for easy mode
+        #INTERMEDIATE_LEVEL_ROCK_COUNT: for Intermediate mode
+        #HARD_LEVEL_ROCK_COUNT: for HARD mode
+        for i in range(INITIAL_ROCK_COUNT):
+            big = LargeAsteroid()
+            self.asteroids.append(big)
+   
+        # Game sound effect
+        self.bullet_sound = arcade.load_sound("sound/bullet.wav")
+        self.asteroid_sound = arcade.load_sound("sound/asteroid.wav")
+        self.ship_sound = arcade.load_sound("sound/ship.wav")
+        self.game_over_sound = arcade.load_sound("sound/game_over.wav")
+        self.congrats_sound = arcade.load_sound("sound/congratulations.wav")
+        self.ship_rotation_sound = arcade.load_sound("sound/rotation.wav")
+       
+        
+        
+        
+
+            
+        
+    def on_draw(self):
+        """
+        Called automatically by the arcade framework.
+        Handles the responsibility of drawing all elements.
+        """
+
+        # clear the screen to begin drawing
+        arcade.start_render()
+        
+
+        # TODO: draw each object
+        self.ship.draw()
+        for asteroid in self.asteroids:
+            asteroid.draw()
+            
+
+        if self.asteroids == []:
+            # Draw Congratulations at the top of the screen
+            img = "images/congratulations.png"
+            texture = arcade.load_texture(img)
+            arcade.draw_texture_rectangle(SCREEN_WIDTH /2, SCREEN_HEIGHT /2, SCREEN_WIDTH - 150, SCREEN_WIDTH - 150, texture, 0, 255)
+            arcade.finish_render()
+            
+            
+        for bullet in self.bullets:
+            bullet.draw()
+            
+        self.check_collisions()
+        self.draw_score()
+        
+    def draw_score(self):
+        """
+        Puts the current score on the screen
+        """
+        score_text = "Score: {}".format(self.score)
+        start_x = 10
+        start_y = SCREEN_HEIGHT - 20
+        arcade.draw_text(score_text, start_x=start_x, start_y=start_y, font_size=15, color=arcade.color.WHITE)
+       
+                   
+    def remove_dead_bullets(self):
+        
+        """ Revemove all bullet that is dead"""
+        for bullet in self.bullets:
+            if (not bullet.alive):
+                self.bullets.remove(bullet)
+    
+    def remove_dead_asteroids(self):
+        """ Remove all asteroids that are dead"""
+        
+        for asteroid in self.asteroids:
+            if (not asteroid.alive):
+                
+                self.asteroids.remove(asteroid)
+                if self.asteroids == []:
+                    arcade.play_sound(self.congrats_sound)
+                    arcade.play_sound(self.congrats_sound)
+                
+    def check_collisions(self):
+        """
+        Checks to see if there is an asteroid and bullet colision,
+        and asteroid and ship colison
+        :return:
+        """
+        
+        for asteroid in self.asteroids:
+            for bullet in self.bullets:
+                if ((bullet.alive) and (asteroid.alive)):
+                    distance_x = abs(asteroid.center.x - bullet.center.x)
+                    distance_y = abs(asteroid.center.y - bullet.center.y)
+                    max_distance = asteroid.radius + bullet.radius
+                    if ((distance_x < max_distance) and (distance_y < max_distance)):
+                        
+                        """We have an asteroid and a bullet collision!!"""
+                        
+                        bullet.alive = False
+                        asteroid.break_apart(self.asteroids)
+                        self.score += SCORE_HIT
+                        #Play an asteroid explosion sound
+                        arcade.play_sound(self.asteroid_sound)
+                        asteroid.draw()
+                            
+                       
+                        
+            if ((asteroid.alive) and (self.ship.alive)):
+                distance_x = abs(asteroid.center.x - self.ship.center.x)
+                distance_y = abs(asteroid.center.y - self.ship.center.y)
+                max_distance = asteroid.radius + self.ship.radius
+                if ((distance_x < max_distance) and (distance_y < max_distance)):
+                    
+                    """We have an asteroid and the ship collision!!"""
+                    
+
+                    self.ship.alive = False
+                    self.score = 0
+                    # Play the Ship explosion sound
+                    arcade.play_sound(self.ship_sound)
+                    # Play a game-over sound
+                    arcade.play_sound(self.game_over_sound)
+                    
+        
+                    
+    
+        
+    def update(self, delta_time):
+        """
+        Update each object in the game.
+        :param delta_time: tells us how much time has actually elapsed
+        """
+        self.check_keys()
+
+        # TODO: Tell everything to advance or move forward one step in time
+        for asteroid in self.asteroids:
+            asteroid.advance()
+            asteroid.Spin(asteroid.spin)
+            
+        for bullet in self.bullets:
+            bullet.advance()
+            
+            
+        self.remove_dead_bullets()
+        self.remove_dead_asteroids()
+        self.ship.advance()
+        
+        
+        # TODO: Check for collisions
+        self.check_collisions()
+        
+                    
+                    
+    def check_keys(self):
+        """
+        This function checks for keys that are being held down.
+        You will need to put your own method calls in here.
+        """
+        if arcade.key.LEFT in self.held_keys:
+            self.ship.rotate_left()
+
+        if arcade.key.RIGHT in self.held_keys:
+            self.ship.rotate_right()
+
+        if arcade.key.UP in self.held_keys:
+            self.ship.thrust_forward()
+
+        if arcade.key.DOWN in self.held_keys:
+            self.ship.thrust_backward()
+
+        # Machine gun mode...
+        #if arcade.key.SPACE in self.held_keys:
+        #    pass
+
+
+    def on_key_press(self, key: int, modifiers: int):
+        """
+        Puts the current key in the set of keys that are being held.
+        You will need to add things here to handle firing the bullet.
+        """
+        if self.ship.alive:
+            self.held_keys.add(key)
+
+            if key == arcade.key.SPACE:
+                # TODO: Fire the bullet here!
+                bullet = Bullet(self.ship.angle, self.ship.center.x, self.ship.center.y)
+                self.bullets.append(bullet)
+                bullet.fire(self.ship.velocity.dx, self.ship.velocity.dy)
+                #Make a bullet sound
+                arcade.play_sound(self.bullet_sound)
+              
+                    
+                
+
+    def on_key_release(self, key: int, modifiers: int):
+        """
+        Removes the current key from the set of held keys.
+        """
+        if key in self.held_keys:
+            self.held_keys.remove(key)
+
+
+# Creates the game and starts it going
+window = Game(SCREEN_WIDTH, SCREEN_HEIGHT)
+arcade.run()   
