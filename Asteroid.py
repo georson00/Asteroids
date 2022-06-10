@@ -193,4 +193,90 @@ class LargeAsteroid(Asteroid):
         asteroids.append(med_ast1)
         asteroids.append(med_ast2)
         asteroids.append(sma_ast)
-        self.alive = False                 
+        self.alive = False
+
+class Bullet(FlyingObject):
+    def __init__(self, ship_ang, ship_x, ship_y):
+        super().__init__("images/laserBlue01.png")
+        self.angle = ship_ang
+        self.center.x = ship_x
+        self.center.y = ship_y
+        self.radius = BULLET_RADIUS
+        self.alive = BULLET_LIFE
+        self.speed =  BULLET_SPEED
+       
+        
+    def fire(self, ship_dx, ship_dy):
+        self.velocity.dx -= ship_dx + math.sin(math.radians(self.angle)) * BULLET_SPEED
+        self.velocity.dy += ship_dy + math.cos(math.radians(self.angle)) * BULLET_SPEED
+         
+    def advance(self):
+        super().advance()
+        self.alive -= 1
+        if (self.alive <= 0):
+            self.alive = False
+            
+class Ship(FlyingObject):
+    def __init__(self):
+        super().__init__("images/playerShip1_orange.png")
+        self.angle = 1
+        self.center.x =(SCREEN_WIDTH/2)
+        self.center.y = (SCREEN_HEIGHT/2)
+        self.radius = SHIP_RADIUS
+        
+    def draw(self):
+        if (self.alive):
+              
+            arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
+        if not self.alive:
+            
+
+            
+            # Draw the damaged ship
+            img = "images/damaged_ship2.png"
+            self.texture = arcade.load_texture(img)
+            arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
+            self.center.x =(SCREEN_WIDTH/2)
+            self.center.y = (SCREEN_HEIGHT/2)
+            self.velocity.dx = 0
+            self.velocity.dy = 0
+#             self.img = "images/ship_explode.jpeg"
+#             self.texture = arcade.load_texture(self.img)
+#             self.width = self.texture.width
+#             self.height = self.texture.height
+#             arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 60)
+            
+            # Draw Game over at the top of the screen
+            img = "images/gameover.jpeg"
+            texture = arcade.load_texture(img)
+            arcade.draw_texture_rectangle(SCREEN_WIDTH - 400, SCREEN_HEIGHT - 70, 400, 200, texture, 0, 255)
+            
+            #draw a message on the screen
+            img2 = "images/broken_ship_message.png"
+            texture2 = arcade.load_texture(img2)
+            arcade.draw_texture_rectangle(SCREEN_WIDTH - 400, SCREEN_HEIGHT - 200, 400, 100, texture2, 0, 255)
+            
+            # Draw Play Again at the botton of the screen
+            img3 = "images/play_again.png"
+            texture3 = arcade.load_texture(img3)
+            arcade.draw_texture_rectangle(SCREEN_WIDTH - 400, SCREEN_HEIGHT - 500, 400, 200, texture3, 0, 255)
+            arcade.finish_render()        
+    
+            
+    def rotate_right(self):
+        # Make the Ship rotate to the right direction 
+        self.angle -= SHIP_TURN_AMOUNT
+        
+    def rotate_left(self):
+        # Make the Ship rotate to the left direction 
+        self.angle += SHIP_TURN_AMOUNT    
+           
+    def thrust_forward(self):
+        # Thrust the ship forward
+        self.velocity.dx -= math.sin(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
+        self.velocity.dy += math.cos(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
+
+    def thrust_backward(self):
+        # Thrust the ship backward
+        self.velocity.dx += math.sin(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
+        self.velocity.dy -= math.cos(math.radians(self.angle)) * SHIP_THRUST_AMOUNT
