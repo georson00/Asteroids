@@ -39,3 +39,13 @@ SMALL_ROCK_RADIUS = 2
 SMALL_ROCK_SPEED = 1.5
 
 SCORE_HIT = 2
+
+class Point:
+    def __init__(self):
+        self.x = 0.0
+        self.y = 0.0
+        
+class Velocity:
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
