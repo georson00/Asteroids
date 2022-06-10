@@ -49,3 +49,43 @@ class Velocity:
     def __init__(self):
         self.dx = 0
         self.dy = 0
+
+class FlyingObject(ABC):
+    
+    def __init__(self, img):
+        self.center = Point()
+        self.velocity = Velocity()
+        self.alive = True
+        self.img = img
+        self.texture = arcade.load_texture(self.img)
+        self.width = self.texture.width
+        self.height = self.texture.height
+        self.radius = 0
+        self.angle = 0
+        self.speed = 0
+        self.direction = 0
+        
+        
+    def advance(self):
+        
+        self.center.x += self.velocity.dx
+        self.center.y += self.velocity.dy
+       
+        # This is for screen wrapping on edges
+        if self.center.x > SCREEN_WIDTH:
+            self.center.x -= SCREEN_WIDTH
+        if self.center.x < 0:
+            self.center.x += SCREEN_WIDTH
+            
+        # This is for screen wrapping on top and bottom
+        if self.center.y > SCREEN_HEIGHT:
+            self.center.y -= SCREEN_HEIGHT
+        if self.center.y < 0:
+            self.center.y  += SCREEN_HEIGHT    
+            
+    def is_alive(self):
+        return self.alive
+    
+    def draw(self):
+        arcade.draw_texture_rectangle(self.center.x, self.center.y, self.width, self.height, self.texture, self.angle, 255)
+                
